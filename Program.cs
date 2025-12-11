@@ -1,11 +1,14 @@
-﻿using System;
+﻿using HtmlAgilityPack;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Net;
-using System.IO;
-using System.Diagnostics;
+using System.Xml;
 
 namespace HttpNewsPAT
 {
@@ -14,7 +17,8 @@ namespace HttpNewsPAT
         static void Main(string[] args)
         {
             Cookie token = SingIn("user", "user");
-            GetContent(token);
+            string Content = GetContent(token);
+            ParsingHtml(Content);
             //WebRequest request = WebRequest.Create("https://news.permaviat.ru/main");
             //HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             //Console.WriteLine(response.StatusDescription);
@@ -81,6 +85,22 @@ namespace HttpNewsPAT
                 
             }
             return Content;
+        }
+        public static void ParsingHtml(string htmlCode)
+        {
+            var Html = new HtmlDocument();
+            Html.LoadHtml(htmlCode);
+
+            var Document = Html.DocumentNode;
+            IEnumerable DivsNews = Document.Descendants(0).Where(n => n.HasClass("news"));
+            foreach (HtmlNode DivNews in DivsNews)
+            {
+                var src = DivNews.ChildNodes[1].GetAttributeValue("src", "нет изображения");
+
+                var name = DivNews.ChildNodes.Count > 3 ? DivNews.ChildNodes[3].InnerHtml : "нет названия";
+                var description = DivNews.ChildNodes.Count > 5 ? DivNews.ChildNodes[5].InnerHtml : "нет описания";
+                Console.WriteLine(name + "\n" + "Изображение" + src + "\n" + "Описание:" + description + "\n");
+            }
         }
 
     }
